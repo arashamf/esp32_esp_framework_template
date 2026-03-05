@@ -22,5 +22,7 @@
     "sys.h": "c",
     "gpio.h": "c"
   },
-  "idf.flashType": "UART"
+  "idf.flashType": "UART",
+  "idf.currentSetup": "C:/soft/Espressif/frameworks/esp-idf-v5.5.1/",
+  "idf.monitorPort": "COM8"
 }
