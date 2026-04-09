@@ -25,16 +25,13 @@
 #define BLINK_PERIOD    CONFIG_BLINK_PERIOD
 
 static const char *TAG = "main";
-static uint8_t s_led_state = 0;
 
 #ifdef CONFIG_BLINK_GPIO
 //------------------------------------------------------------------------------------------------//
 void task_blink_led  (void *pvParameters) ;
 
 //------------------------------------------------------------------------------------------------//
-static void blink_led(uint32_t state) {
-    gpio_set_level(BLINK_GPIO, state); //Set the GPIO level according to the state (LOW or HIGH)
-}
+static void blink_led(uint32_t state) { gpio_set_level(BLINK_GPIO, (state&0x01)); }    //Set the GPIO level according to the state (LOW or HIGH)
 
 //------------------------------------------------------------------------------------------------//
 static void configure_led(void) {
@@ -46,10 +43,8 @@ static void configure_led(void) {
 #endif
 
 //------------------------------------------------------------------------------------------------//
-void app_main(void)
-{
+void app_main(void) {
     wifi_ap_record_t info;
-    configure_led(); // Configure the peripheral according to the LED type 
     esp_err_t ret = nvs_flash_init();     //Initialize NVS
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
         ret = nvs_flash_erase();
@@ -66,28 +61,32 @@ void app_main(void)
     wifi_init_sta();
     xTaskCreate(udp_task, "udp_task", 4096, NULL, 4, NULL);
     xTaskCreate(ntp_task, "ntp_task", 4096, NULL, 5, NULL);
-    xTaskCreate(task_blink_led, "blink_led", 128, NULL, 6, NULL);
+
+    configure_led(); // Configure the peripheral according to the LED type 
+    uint8_t s_led_state = 1;
+    blink_led(s_led_state&0x01); 
+   // xTaskCreate(task_blink_led, "blink_led", 512, NULL, 6, NULL);
 
     while (1)   {
-       // ESP_LOGI(TAG, "Heap free size:%d", xPortGetFreeHeapSize());
-        ret = esp_wifi_sta_get_ap_info(&info); //информация о точке доступа, с которой связано устройство
+       ESP_LOGI(TAG, "Heap free size:%d", xPortGetFreeHeapSize());
+       ret = esp_wifi_sta_get_ap_info(&info); //информация о точке доступа, с которой связано устройство
         if (ret != ESP_OK) {
             ESP_LOGI(TAG, "error! wifi_sta_get_ap_info: 0x%04x", ret); //вывод статуса соединения с точкой доступа
             wifi_init_sta();    //если нет соединения с с точкой доступа, попытка нового соединения
         }
-        else {  
-         //   ESP_LOGI(TAG, "SSID: %s, %s", info.ssid, print_wifi_ip ()); 
-        }
+        blink_led(s_led_state&0x01); 
+        s_led_state = !s_led_state;  
         vTaskDelay(5000 / portTICK_PERIOD_MS);
     }
 }
 
 //------------------------------------------------------------------------------------------------//
-void task_blink_led  (void *pvParameters) {
-
+void task_blink_led (void *pvParameters) {
+    uint8_t s_led_state = 0;
+  //  configure_led(); // Configure the peripheral according to the LED type 
     while(1)    {
         blink_led(s_led_state);                  //Toggle the LED state
         s_led_state = !s_led_state;
-        vTaskDelay(BLINK_PERIOD / portTICK_PERIOD_MS);
+        vTaskDelay(BLINK_PERIOD/portTICK_PERIOD_MS);
     }
 }

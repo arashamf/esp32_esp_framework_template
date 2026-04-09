@@ -57,12 +57,12 @@ static void event_handler(void* arg, esp_event_base_t event_base,int32_t event_i
     } 
     else {
         if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-            if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY) {
+           // if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY) {
                 esp_wifi_connect();//Connect WiFi station to the AP. If station interface is connected to an AP, call esp_wifi_disconnect to disconnect.
                 s_retry_num++;
-                ESP_LOGI(TAG, "retry to connect to the AP");
-            } 
-            else {  xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);  }
+                ESP_LOGI(TAG, "retry to connect to the AP=%d",s_retry_num);
+           // } 
+           // else {  xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);  }
         ESP_LOGI(TAG,"connect to the AP fail");
         } 
         else    {
@@ -107,7 +107,6 @@ void wifi_init_sta(void)
                                                         &event_handler,
                                                         NULL,
                                                         &instance_got_ip));
-
     wifi_config_t wifi_config = {
         .sta = {
             .ssid = EXAMPLE_ESP_WIFI_SSID,
@@ -137,8 +136,8 @@ void wifi_init_sta(void)
     if (bits & WIFI_CONNECTED_BIT) 
     {    ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",EXAMPLE_ESP_WIFI_SSID,EXAMPLE_ESP_WIFI_PASS);   } 
     else {
-        if (bits & WIFI_FAIL_BIT) {
-            ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",EXAMPLE_ESP_WIFI_SSID,EXAMPLE_ESP_WIFI_PASS); } 
+        if (bits & WIFI_FAIL_BIT)   
+        { ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",EXAMPLE_ESP_WIFI_SSID,EXAMPLE_ESP_WIFI_PASS); } 
         else {  ESP_LOGE(TAG, "UNEXPECTED EVENT");  }
     }
 }
